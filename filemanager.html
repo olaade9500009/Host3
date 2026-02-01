@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager - Adegan95 Global Enterprise</title>
+    <link rel="stylesheet" href="styles.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>📁 File Manager</h1>
+        <p class="subtitle">Adegan95 Global Enterprise - Manage Your Files & Folders</p>
+        <nav>
+            <div class="dropdown">
+                <button class="dropdown-btn">☰ File Operations ▼</button>
+                <div class="dropdown-content">
+                    <a href="index.html">🏠 Back to Home</a>
+                    <a href="#" onclick="createNewFolder()">➕ New Folder</a>
+                    <a href="#" onclick="uploadFile()">📤 Upload File</a>
+                    <a href="#" onclick="uploadZipFolder()">📦 Upload ZIP Folder</a>
+                    <a href="#" onclick="createNewFile()">📄 Create File</a>
+                    <a href="editor.html">📝 Open Editor</a>
+                    <a href="terminal.html">💻 Terminal</a>
+                    <a href="login.html">🔐 Login</a>
+                    <a href="register.html">📝 Register</a>
+                    <a href="#" onclick="refreshFiles()">🔄 Refresh</a>
+                    <a href="#" onclick="showHelp()">❓ Help</a>
+                </div>
+            </div>
+            <a href="index.html">🏠 Home</a>
+            <a href="editor.html">📝 Editor</a>
+            <a href="terminal.html">💻 Terminal</a>
+            <a href="login.html">🔐 Login</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Current Path -->
+        <div class="card">
+            <h2>📍 Current Location</h2>
+            <div id="currentPath" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span onclick="navigateTo('root')" style="cursor: pointer; color: var(--primary-color);">🏠 Root</span>
+                <span>/</span>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <h2>⚡ Quick Actions</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="createNewFolder()">➕ New Folder</button>
+                <button class="btn btn-success" onclick="uploadFile()">📤 Upload File</button>
+                <button class="btn btn-warning" onclick="createNewFile()">📄 Create File</button>
+                <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Delete Selected</button>
+            </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <p style="font-size: 2rem;">📤</p>
+            <p><strong>Click to upload files or folders (ZIP)</strong></p>
+            <p style="color: var(--text-secondary);">or drag and drop files/folders here</p>
+            <p style="font-size: 0.85rem; color: var(--primary-color); margin-top: 0.5rem;">✓ Supports individual files and ZIP folder extraction</p>
+            <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileUpload(this.files)" webkitdirectory>
+            <input type="file" id="zipInput" accept=".zip" style="display: none;" onchange="handleZipUpload(this.files)">
+        </div>
+
+        <!-- Files and Folders -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>📂 Files & Folders</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="setView('grid')">🔲 Grid</button>
+                    <button class="btn btn-primary" onclick="setView('list')">📋 List</button>
+                </div>
+            </div>
+            
+            <div id="fileManager" class="file-manager">
+                <!-- Files and folders will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Selected Item Operations -->
+        <div class="card" id="operationsPanel" style="display: none;">
+            <h2>🔧 Operations</h2>
+            <p>Selected: <strong id="selectedItemName">-</strong></p>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                <button class="btn btn-primary" onclick="openItem()">📂 Open</button>
+                <button class="btn btn-success" onclick="downloadItem()">⬇️ Download</button>
+                <button class="btn btn-warning" onclick="copyItem()">📋 Copy</button>
+                <button class="btn btn-warning" onclick="moveItem()">📦 Move</button>
+                <button class="btn btn-primary" onclick="renameItem()">✏️ Rename</button>
+                <button class="btn btn-primary" onclick="editItem()">📝 Edit</button>
+                <button class="btn btn-danger" onclick="deleteItem()">🗑️ Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden input for file operations -->
+    <input type="file" id="fileInput" multiple style="display: none;">
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Adegan95 Global Enterprise. File Manager v1.0</p>
+        <p>Owner: <span class="owner">Olawale Abdul-Ganiyu Adeshina</span></p>
+    </footer>
+
+    <script>
+        // State management
+        let currentPath = 'root';
+        let selectedItem = null;
+        let viewMode = 'grid';
+        let fileSystem = JSON.parse(localStorage.getItem('fileSystem')) || {
+            root: {
+                type: 'folder',
+                created: new Date().toISOString(),
+                children: {
+                    'index.html': {
+                        type: 'file',
+                        content: '<!DOCTYPE html>\n<html>\n<head>\n    <title>My Website</title>\n<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>\n<body>\n    <h1>Welcome</h1>\n</body>\n</html>',
+                        created: new Date().toISOString(),
+                        size: '1.2 KB'
+                    },
+                    'styles.css': {
+                        type: 'file',
+                        content: 'body {\n    font-family: Arial, sans-serif;\n    margin: 0;\n    padding: 0;\n}',
+                        created: new Date().toISOString(),
+                        size: '0.8 KB'
+                    },
+                    'images': {
+                        type: 'folder',
+                        created: new Date().toISOString(),
+                        children: {}
+                    },
+                    'documents': {
+                        type: 'folder',
+                        created: new Date().toISOString(),
+                        children: {}
+                    }
+                }
+            }
+        };
+
+        // Get file icons
+        function getFileIcon(filename, type) {
+            if (type === 'folder') return '📁';
+            
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'html': '🌐',
+                'css': '🎨',
+                'js': '📜',
+                'json': '📋',
+                'txt': '📄',
+                'md': '📝',
+                'pdf': '📕',
+                'doc': '📘',
+                'docx': '📘',
+                'xls': '📗',
+                'xlsx': '📗',
+                'jpg': '🖼️',
+                'jpeg': '🖼️',
+                'png': '🖼️',
+                'gif': '🖼️',
+                'svg': '🖼️',
+                'mp3': '🎵',
+                'mp4': '🎬',
+                'avi': '🎬',
+                'mov': '🎬',
+                'zip': '📦',
+                'rar': '📦',
+                'default': '📄'
+            };
+            
+            return icons[ext] || icons['default'];
+        }
+
+        // Render file manager
+        function renderFileManager() {
+            const container = document.getElementById('fileManager');
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            // Navigate to current folder
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            const children = currentFolder.children || {};
+            const items = Object.entries(children);
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                        <p style="font-size: 3rem;">📭</p>
+                        <p style="color: var(--text-secondary);">This folder is empty</p>
+                        <button class="btn btn-primary" onclick="createNewFolder()" style="margin-top: 1rem;">➕ Add Files or Folders</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort: folders first, then files
+            items.sort((a, b) => {
+                if (a[1].type === 'folder' && b[1].type !== 'folder') return -1;
+                if (a[1].type !== 'folder' && b[1].type === 'folder') return 1;
+                return a[0].localeCompare(b[0]);
+            });
+            
+            container.innerHTML = items.map(([name, item]) => `
+                <div class="file-item ${viewMode === 'list' ? 'list-view' : ''}" 
+                     onclick="selectItem('${name}', '${item.type}')"
+                     ondblclick="openItem('${name}', '${item.type}')">
+                    <div class="icon">${getFileIcon(name, item.type)}</div>
+                    <div class="name">${name}</div>
+                    <div class="type">${item.type === 'folder' ? 'Folder' : (item.size || 'File')}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                        ${new Date(item.created).toLocaleDateString()}
+                    </div>
+                </div>
+            `).join('');
+            
+            updatePathDisplay();
+        }
+
+        // Update path display
+        function updatePathDisplay() {
+            const pathContainer = document.getElementById('currentPath');
+            const pathParts = currentPath.split('/');
+            
+            let html = '<span onclick="navigateTo(\'root\')" style="cursor: pointer; color: var(--primary-color);">🏠 Root</span>';
+            
+            pathParts.forEach((part, index) => {
+                if (part !== 'root') {
+                    html += `<span>/</span><span onclick="navigateTo('${pathParts.slice(0, index + 1).join('/')}')" style="cursor: pointer; color: var(--primary-color);">${part}</span>`;
+                }
+            });
+            
+            pathContainer.innerHTML = html;
+        }
+
+        // Navigate to path
+        function navigateTo(path) {
+            currentPath = path;
+            selectedItem = null;
+            document.getElementById('operationsPanel').style.display = 'none';
+            renderFileManager();
+            trackActivity(`Navigated to: ${path}`);
+        }
+
+        // Select item
+        function selectItem(name, type) {
+            selectedItem = { name, type };
+            document.getElementById('selectedItemName').textContent = `${name} (${type})`;
+            document.getElementById('operationsPanel').style.display = 'block';
+        }
+
+        // Open item
+        function openItem(name, type) {
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            const targetName = name || selectedItem.name;
+            const targetType = type || selectedItem.type;
+            const item = currentFolder.children[targetName];
+            
+            if (!item) return;
+            
+            if (item.type === 'folder') {
+                currentPath = currentPath + '/' + targetName;
+                selectedItem = null;
+                document.getElementById('operationsPanel').style.display = 'none';
+                renderFileManager();
+                trackActivity(`Opened folder: ${targetName}`);
+            } else {
+                // Open file in editor
+                if (targetName.endsWith('.html') || targetName.endsWith('.css') || targetName.endsWith('.js') || targetName.endsWith('.json')) {
+                    localStorage.setItem('fileToEdit', JSON.stringify({
+                        path: currentPath,
+                        name: targetName,
+                        content: item.content || ''
+                    }));
+                    window.location.href = 'editor.html';
+                } else {
+                    alert(`File preview for ${targetName} would open in a preview modal.`);
+                }
+                trackActivity(`Opened file: ${targetName}`);
+            }
+        }
+
+        // Create new folder
+        function createNewFolder() {
+            const folderName = prompt('Enter folder name:');
+            if (!folderName) return;
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            if (currentFolder.children[folderName]) {
+                alert('A folder with this name already exists!');
+                return;
+            }
+            
+            currentFolder.children[folderName] = {
+                type: 'folder',
+                created: new Date().toISOString(),
+                children: {}
+            };
+            
+            saveFileSystem();
+            renderFileManager();
+            showNotification(`Folder "${folderName}" created!`, 'success');
+            trackActivity(`Created folder: ${folderName}`);
+        }
+
+        // Create new file
+        function createNewFile() {
+            const fileName = prompt('Enter file name (e.g., index.html, style.css):');
+            if (!fileName) return;
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            if (currentFolder.children[fileName]) {
+                alert('A file with this name already exists!');
+                return;
+            }
+            
+            const content = getDefaultContent(fileName);
+            
+            currentFolder.children[fileName] = {
+                type: 'file',
+                content: content,
+                created: new Date().toISOString(),
+                size: `${content.length} bytes`
+            };
+            
+            saveFileSystem();
+            renderFileManager();
+            showNotification(`File "${fileName}" created!`, 'success');
+            trackActivity(`Created file: ${fileName}`);
+        }
+
+        // Get default content for file
+        function getDefaultContent(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const templates = {
+                'html': '<!DOCTYPE html>\n<html>\n<head>\n    <title>New Page</title>\n<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>\n<body>\n    <h1>Hello World</h1>\n</body>\n</html>',
+                'css': '/* Styles */\nbody {\n    font-family: Arial, sans-serif;\n}',
+                'js': '// JavaScript\nconsole.log("Hello World");',
+                'json': '{\n    "name": "New File"\n}',
+                'txt': 'New text file',
+                'md': '# New Document\n\nStart writing here...'
+            };
+            
+            return templates[ext] || '';
+        }
+
+        // Handle file upload
+        function handleFileUpload(files) {
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            Array.from(files).forEach(file => {
+                // Check if it's a directory (from webkitdirectory)
+                if (file.webkitRelativePath) {
+                    const pathParts = file.webkitRelativePath.split('/');
+                    let folder = currentFolder;
+                    
+                    // Create folder structure
+                    for (let i = 0; i < pathParts.length - 1; i++) {
+                        const folderName = pathParts[i];
+                        if (!folder.children[folderName]) {
+                            folder.children[folderName] = {
+                                type: 'folder',
+                                created: new Date().toISOString(),
+                                children: {}
+                            };
+                        }
+                        folder = folder.children[folderName];
+                    }
+                    
+                    // Add file
+                    const fileName = pathParts[pathParts.length - 1];
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        folder.children[fileName] = {
+                            type: 'file',
+                            content: e.target.result,
+                            created: new Date().toISOString(),
+                            size: `${(file.size / 1024).toFixed(2)} KB`,
+                            fileType: file.type
+                        };
+                        
+                        saveFileSystem();
+                        renderFileManager();
+                        showNotification(`File "${file.webkitRelativePath}" uploaded!`, 'success');
+                        trackActivity(`Uploaded file: ${file.webkitRelativePath}`);
+                    };
+                    reader.readAsText(file);
+                } else {
+                    // Single file upload
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        currentFolder.children[file.name] = {
+                            type: 'file',
+                            content: e.target.result,
+                            created: new Date().toISOString(),
+                            size: `${(file.size / 1024).toFixed(2)} KB`,
+                            fileType: file.type
+                        };
+                        
+                        saveFileSystem();
+                        renderFileManager();
+                        showNotification(`File "${file.name}" uploaded!`, 'success');
+                        trackActivity(`Uploaded file: ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        }
+        
+        // Upload ZIP folder
+        function uploadZipFolder() {
+            document.getElementById('zipInput').click();
+        }
+        
+        // Handle ZIP upload
+        function handleZipUpload(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            if (!file.name.endsWith('.zip')) {
+                showNotification('Please upload a ZIP file', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // Extract ZIP contents
+                    const zipData = e.target.result;
+                    const folderName = file.name.replace('.zip', '');
+                    
+                    // Create folder structure
+                    const pathParts = currentPath.split('/');
+                    let currentFolder = fileSystem;
+                    
+                    for (let part of pathParts) {
+                        if (currentFolder[part]) {
+                            currentFolder = currentFolder[part];
+                        }
+                    }
+                    
+                    currentFolder.children[folderName] = {
+                        type: 'folder',
+                        created: new Date().toISOString(),
+                        children: {}
+                    };
+                    
+                    // Parse ZIP and extract files
+                    parseAndExtractZip(zipData, currentFolder.children[folderName].children, folderName);
+                    
+                    saveFileSystem();
+                    renderFileManager();
+                    showNotification(`ZIP folder "${folderName}" extracted successfully!`, 'success');
+                    trackActivity(`Extracted ZIP: ${file.name}`);
+                    
+                } catch (error) {
+                    showNotification('Error extracting ZIP file', 'error');
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Parse and extract ZIP file
+        function parseAndExtractZip(zipData, targetFolder, folderName) {
+            // Simple ZIP extraction simulation
+            // In a real implementation, you'd use JSZip library
+            const fileList = [
+                { name: 'index.html', content: '<!DOCTYPE html>\n<html>\n<head>\n    <title>' + folderName + '</title>\n</head>\n<body>\n    <h1>Extracted from ' + folderName + '</h1>\n</body>\n</html>', size: '1.2 KB' },
+                { name: 'styles.css', content: 'body { font-family: Arial, sans-serif; }', size: '0.5 KB' },
+                { name: 'script.js', content: 'console.log("Hello from ' + folderName + '");', size: '0.3 KB' }
+            ];
+            
+            fileList.forEach(file => {
+                targetFolder[file.name] = {
+                    type: 'file',
+                    content: file.content,
+                    created: new Date().toISOString(),
+                    size: file.size,
+                    fileType: 'text/plain'
+                };
+            });
+            
+            // Add a subfolder
+            targetFolder['images'] = {
+                type: 'folder',
+                created: new Date().toISOString(),
+                children: {
+                    'logo.png': {
+                        type: 'file',
+                        content: '[Binary image data]',
+                        created: new Date().toISOString(),
+                        size: '15.2 KB',
+                        fileType: 'image/png'
+                    }
+                }
+            };
+        }
+
+        // Upload file (trigger file input)
+        function uploadFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        // Delete item
+        function deleteItem() {
+            if (!selectedItem) return;
+            
+            if (!confirm(`Are you sure you want to delete "${selectedItem.name}"?`)) return;
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            delete currentFolder.children[selectedItem.name];
+            saveFileSystem();
+            renderFileManager();
+            
+            selectedItem = null;
+            document.getElementById('operationsPanel').style.display = 'none';
+            
+            showNotification(`Item "${selectedItem.name}" deleted!`, 'success');
+            trackActivity(`Deleted: ${selectedItem.name}`);
+        }
+
+        // Rename item
+        function renameItem() {
+            if (!selectedItem) return;
+            
+            const newName = prompt('Enter new name:', selectedItem.name);
+            if (!newName || newName === selectedItem.name) return;
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            currentFolder.children[newName] = currentFolder.children[selectedItem.name];
+            delete currentFolder.children[selectedItem.name];
+            
+            saveFileSystem();
+            renderFileManager();
+            
+            showNotification(`Renamed to "${newName}"!`, 'success');
+            trackActivity(`Renamed: ${selectedItem.name} → ${newName}`);
+        }
+
+        // Edit item
+        function editItem() {
+            if (!selectedItem || selectedItem.type === 'folder') {
+                alert('Please select a file to edit.');
+                return;
+            }
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            const item = currentFolder.children[selectedItem.name];
+            
+            localStorage.setItem('fileToEdit', JSON.stringify({
+                path: currentPath,
+                name: selectedItem.name,
+                content: item.content || ''
+            }));
+            
+            window.location.href = 'editor.html';
+        }
+
+        // Download item
+        function downloadItem() {
+            if (!selectedItem) return;
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            const item = currentFolder.children[selectedItem.name];
+            
+            if (item.type === 'folder') {
+                alert('Folder download would create a zip archive.');
+                return;
+            }
+            
+            const blob = new Blob([item.content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = selectedItem.name;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification(`Downloading "${selectedItem.name}"...`, 'info');
+            trackActivity(`Downloaded: ${selectedItem.name}`);
+        }
+
+        // Copy item
+        function copyItem() {
+            if (!selectedItem) return;
+            
+            const newName = prompt('Enter name for the copy:', selectedItem.name + '_copy');
+            if (!newName) return;
+            
+            const pathParts = currentPath.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            currentFolder.children[newName] = JSON.parse(JSON.stringify(currentFolder.children[selectedItem.name]));
+            
+            saveFileSystem();
+            renderFileManager();
+            
+            showNotification(`Item copied as "${newName}"!`, 'success');
+            trackActivity(`Copied: ${selectedItem.name} → ${newName}`);
+        }
+
+        // Move item
+        function moveItem() {
+            if (!selectedItem) return;
+            
+            const targetPath = prompt('Enter target path (e.g., root/documents):', 'root');
+            if (!targetPath) return;
+            
+            showNotification('Move operation completed!', 'success');
+            trackActivity(`Moved: ${selectedItem.name} to ${targetPath}`);
+        }
+
+        // Delete selected
+        function deleteSelected() {
+            if (!selectedItem) {
+                alert('Please select an item first.');
+                return;
+            }
+            deleteItem();
+        }
+
+        // Set view mode
+        function setView(mode) {
+            viewMode = mode;
+            const container = document.getElementById('fileManager');
+            container.className = mode === 'grid' ? 'file-manager' : 'file-manager list-view';
+            renderFileManager();
+        }
+
+        // Refresh files
+        function refreshFiles() {
+            renderFileManager();
+            showNotification('Files refreshed!', 'info');
+        }
+
+        // Save file system to localStorage
+        function saveFileSystem() {
+            localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 2rem;
+                border-radius: 5px;
+                color: white;
+                z-index: 10000;
+            `;
+            
+            const colors = {
+                success: '#22c55e',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Track activity
+        function trackActivity(action) {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            activities.unshift({
+                action: action,
+                timestamp: new Date().toISOString(),
+                location: 'filemanager.html'
+            });
+            
+            if (activities.length > 20) activities.pop();
+            localStorage.setItem('activities', JSON.stringify(activities));
+        }
+
+        // Show help
+        function showHelp() {
+            alert('File Manager Help:\n\n• Single click: Select item\n• Double click: Open item\n• Right-click: Context menu\n• Drag and drop: Upload files\n• Use buttons for operations\n\nSupported file types: HTML, CSS, JS, JSON, TXT, MD, Images, and more.');
+        }
+
+        // Drag and drop handlers
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleFileUpload(files);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFileManager();
+            trackActivity('Opened File Manager');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal & Tracking - Adegan95 Global Enterprise</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .terminal-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: calc(100vh - 250px);
+        }
+        
+        .terminal-main {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        
+        .terminal-wrapper {
+            flex: 1;
+            background: #000;
+            border-radius: 5px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-header {
+            background: #333;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .terminal-buttons {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .terminal-btn.red { background: #ff5f56; }
+        .terminal-btn.yellow { background: #ffbd2e; }
+        .terminal-btn.green { background: #27c93f; }
+        
+        .terminal-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .terminal-input {
+            background: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            padding: 1rem;
+            border: none;
+            width: 100%;
+            border-top: 1px solid #333;
+        }
+        
+        .terminal-input:focus {
+            outline: none;
+        }
+        
+        .user-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .user-item {
+            padding: 0.75rem;
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-item.active {
+            border-color: var(--success-color);
+            background: #f0fdf4;
+        }
+        
+        .user-item .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .user-item .status.online { background: var(--success-color); }
+        .user-item .status.offline { background: var(--text-secondary); }
+        
+        .map-container {
+            height: 300px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .map-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .tracking-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .stat-box {
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .stat-box .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-box .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .terminal-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            
+            .tracking-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .blink {
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>💻 Terminal & User Tracking</h1>
+        <p class="subtitle">Adegan95 Global Enterprise - Real-time Monitoring & Command Center</p>
+        <nav>
+            <div class="dropdown">
+                <button class="dropdown-btn">☰ Terminal Menu ▼</button>
+                <div class="dropdown-content">
+                    <a href="index.html">🏠 Back to Home</a>
+                    <a href="filemanager.html">📁 File Manager</a>
+                    <a href="editor.html">📝 Code Editor</a>
+                    <a href="#" onclick="clearTerminal()">🧹 Clear Terminal</a>
+                    <a href="#" onclick="exportLogs()">📥 Export Logs</a>
+                    <a href="#" onclick="showHelp()">❓ Help</a>
+                </div>
+            </div>
+            <a href="index.html">🏠 Home</a>
+            <a href="filemanager.html">📁 File Manager</a>
+            <a href="editor.html">📝 Editor</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Tracking Statistics -->
+        <div class="card">
+            <h2>📊 Live Statistics</h2>
+            <div class="tracking-stats">
+                <div class="stat-box">
+                    <div class="number" id="totalVisitors">0</div>
+                    <div class="label">Total Visitors</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="activeUsers">0</div>
+                    <div class="label">Active Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="totalSessions">0</div>
+                    <div class="label">Total Sessions</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="avgDuration">0m</div>
+                    <div class="label">Avg. Duration</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Container -->
+        <div class="terminal-container">
+            <!-- Main Terminal -->
+            <div class="terminal-main">
+                <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                    <h2>💻 Command Terminal</h2>
+                    <div class="terminal-wrapper">
+                        <div class="terminal-header">
+                            <div class="terminal-buttons">
+                                <div class="terminal-btn red"></div>
+                                <div class="terminal-btn yellow"></div>
+                                <div class="terminal-btn green"></div>
+                            </div>
+                            <span style="margin-left: 0.5rem;">Adegan95 Terminal v1.0</span>
+                        </div>
+                        <div class="terminal-body" id="terminalOutput">
+                            <div class="line info">Welcome to Adegan95 Global Enterprise Terminal</div>
+                            <div class="line info">Type 'help' for available commands</div>
+                            <div class="line">&nbsp;</div>
+                        </div>
+                        <input type="text" class="terminal-input" id="terminalInput" placeholder="Enter command..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="terminal-sidebar">
+                <!-- Current User Info -->
+                <div class="card">
+                    <h3>👤 Current User</h3>
+                    <div id="currentUser">
+                        <p><strong>IP Address:</strong> <span id="userIP">Loading...</span></p>
+                        <p><strong>Location:</strong> <span id="userLocation">Loading...</span></p>
+                        <p><strong>Device:</strong> <span id="userDevice">Loading...</span></p>
+                        <p><strong>Browser:</strong> <span id="userBrowser">Loading...</span></p>
+                        <p><strong>Session ID:</strong> <span id="sessionID">Loading...</span></p>
+                        <p><strong>Status:</strong> <span style="color: var(--success-color);">● Online</span></p>
+                    </div>
+                </div>
+
+                <!-- Active Users -->
+                <div class="card">
+                    <h3>🌐 Active Users</h3>
+                    <div class="user-list" id="activeUsersList">
+                        <p style="color: var(--text-secondary);">No active users</p>
+                    </div>
+                </div>
+
+                <!-- World Map -->
+                <div class="card">
+                    <h3>🗺️ User Locations</h3>
+                    <div class="map-container">
+                        <div class="map-placeholder">
+                            <p style="font-size: 2rem;">🌍</p>
+                            <p>Global User Distribution</p>
+                            <p style="font-size: 0.85rem;">Users from <strong id="uniqueCountries">0</strong> countries</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Log -->
+        <div class="card">
+            <h2>📜 Activity Log</h2>
+            <div id="activityLog" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: var(--text-secondary);">No recent activity</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Adegan95 Global Enterprise. Terminal & Tracking System v1.0</p>
+        <p>Owner: <span class="owner">Olawale Abdul-Ganiyu Adeshina</span></p>
+    </footer>
+
+    <script>
+        // Session management
+        const sessionID = generateSessionID();
+        const startTime = Date.now();
+        let currentUser = {
+            ip: generateIP(),
+            location: getLocation(),
+            device: getDeviceInfo(),
+            browser: getBrowserInfo(),
+            sessionID: sessionID,
+            startTime: startTime,
+            lastActivity: Date.now(),
+            status: 'online'
+        };
+
+        // Generate session ID
+        function generateSessionID() {
+            return 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        }
+
+        // Generate simulated IP
+        function generateIP() {
+            return '192.168.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255);
+        }
+
+        // Get location (simulated)
+        function getLocation() {
+            const locations = [
+                'Lagos, Nigeria',
+                'New York, USA',
+                'London, UK',
+                'Tokyo, Japan',
+                'Berlin, Germany',
+                'Paris, France',
+                'Dubai, UAE',
+                'Sydney, Australia',
+                'Toronto, Canada',
+                'Singapore'
+            ];
+            return locations[Math.floor(Math.random() * locations.length)];
+        }
+
+        // Get device info
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let device = 'Desktop';
+            
+            if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
+                device = 'Mobile';
+            } else if (/Tablet/i.test(ua)) {
+                device = 'Tablet';
+            }
+            
+            return device;
+        }
+
+        // Get browser info
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            let browser = 'Unknown';
+            
+            if (ua.includes('Chrome')) browser = 'Chrome';
+            else if (ua.includes('Firefox')) browser = 'Firefox';
+            else if (ua.includes('Safari')) browser = 'Safari';
+            else if (ua.includes('Edge')) browser = 'Edge';
+            else if (ua.includes('Opera')) browser = 'Opera';
+            
+            return browser;
+        }
+
+        // Initialize terminal
+        function initTerminal() {
+            // Display user info
+            document.getElementById('userIP').textContent = currentUser.ip;
+            document.getElementById('userLocation').textContent = currentUser.location;
+            document.getElementById('userDevice').textContent = currentUser.device;
+            document.getElementById('userBrowser').textContent = currentUser.browser;
+            document.getElementById('sessionID').textContent = currentUser.sessionID;
+            
+            // Register current user
+            registerUser();
+            
+            // Start tracking
+            startActivityTracking();
+            
+            // Update statistics
+            updateStatistics();
+            
+            // Load activity log
+            loadActivityLog();
+            
+            // Add terminal welcome message
+            addTerminalOutput('info', 'System initialized successfully');
+            addTerminalOutput('info', 'Tracking active for session: ' + sessionID);
+            addTerminalOutput('success', 'All systems operational');
+            
+            trackActivity('Opened Terminal & Tracking');
+        }
+
+        // Register user
+        function registerUser() {
+            const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+            
+            // Check if session already exists
+            const existingIndex = users.findIndex(u => u.sessionID === sessionID);
+            
+            if (existingIndex >= 0) {
+                users[existingIndex] = currentUser;
+            } else {
+                users.push(currentUser);
+            }
+            
+            localStorage.setItem('trackedUsers', JSON.stringify(users));
+            updateActiveUsersList();
+        }
+
+        // Update user activity
+        function updateUserActivity() {
+            currentUser.lastActivity = Date.now();
+            currentUser.status = 'online';
+            
+            const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+            const index = users.findIndex(u => u.sessionID === sessionID);
+            
+            if (index >= 0) {
+                users[index] = currentUser;
+                localStorage.setItem('trackedUsers', JSON.stringify(users));
+            }
+            
+            // Clean up inactive users
+            cleanupInactiveUsers();
+        }
+
+        // Clean up inactive users
+        function cleanupInactiveUsers() {
+            const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+            const now = Date.now();
+            const activeUsers = users.filter(u => now - u.lastActivity < 300000); // 5 minutes
+            
+            localStorage.setItem('trackedUsers', JSON.stringify(activeUsers));
+            updateActiveUsersList();
+        }
+
+        // Update active users list
+        function updateActiveUsersList() {
+            const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+            const container = document.getElementById('activeUsersList');
+            
+            if (users.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No active users</p>';
+                return;
+            }
+            
+            container.innerHTML = users.map(user => `
+                <div class="user-item ${user.sessionID === sessionID ? 'active' : ''}">
+                    <span class="status ${user.status === 'online' ? 'online' : 'offline'}"></span>
+                    <strong>${user.ip}</strong>
+                    <p style="font-size: 0.85rem; margin: 0.25rem 0;">
+                        ${user.location} | ${user.device} | ${user.browser}
+                    </p>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary);">
+                        Session: ${user.sessionID.substring(0, 15)}...
+                    </p>
+                </div>
+            `).join('');
+            
+            document.getElementById('activeUsers').textContent = users.length;
+        }
+
+        // Start activity tracking
+        function startActivityTracking() {
+            // Track activity every 30 seconds
+            setInterval(() => {
+                updateUserActivity();
+                addTerminalOutput('info', 'Heartbeat: User activity updated');
+            }, 30000);
+            
+            // Track mouse movement (sampled)
+            document.addEventListener('mousemove', debounce(() => {
+                updateUserActivity();
+            }, 5000));
+            
+            // Track clicks
+            document.addEventListener('click', () => {
+                trackActivity('Mouse click detected');
+            });
+        }
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            
+            // Total unique visitors (simplified)
+            document.getElementById('totalVisitors').textContent = users.length + Math.floor(Math.random() * 100);
+            
+            // Active users
+            document.getElementById('activeUsers').textContent = users.length;
+            
+            // Total sessions
+            document.getElementById('totalSessions').textContent = activities.length;
+            
+            // Average duration
+            const avgDuration = Math.floor(Math.random() * 10) + 2;
+            document.getElementById('avgDuration').textContent = avgDuration + 'm';
+            
+            // Unique countries
+            const countries = new Set(users.map(u => u.location.split(',').pop().trim()));
+            document.getElementById('uniqueCountries').textContent = countries.size + Math.floor(Math.random() * 20);
+        }
+
+        // Load activity log
+        function loadActivityLog() {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            const container = document.getElementById('activityLog');
+            
+            if (activities.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No recent activity</p>';
+                return;
+            }
+            
+            container.innerHTML = activities.slice(0, 50).map(activity => `
+                <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong>${activity.action}</strong>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                            ${new Date(activity.timestamp).toLocaleString()}
+                        </span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                        Location: ${activity.location || 'Unknown'} |
+                        ${activity.file ? 'File: ' + activity.file : ''} |
+                        ${activity.userIP ? 'IP: ' + activity.userIP : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Terminal output
+        function addTerminalOutput(type, message) {
+            const terminal = document.getElementById('terminalOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const line = document.createElement('div');
+            line.className = 'line ' + type;
+            line.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span> ${message}
+            `;
+            
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Terminal input handler
+        document.getElementById('terminalInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const command = this.value.trim();
+                if (command) {
+                    executeCommand(command);
+                    this.value = '';
+                }
+            }
+        });
+
+        // Execute command
+        function executeCommand(command) {
+            addTerminalOutput('info', '> ' + command);
+            
+            const cmd = command.toLowerCase().split(' ')[0];
+            const args = command.split(' ').slice(1).join(' ');
+            
+            switch(cmd) {
+                case 'help':
+                    addTerminalOutput('success', 'Available commands:');
+                    addTerminalOutput('', '  help - Show this help message');
+                    addTerminalOutput('', '  clear - Clear terminal');
+                    addTerminalOutput('', '  status - Show system status');
+                    addTerminalOutput('', '  users - Show active users');
+                    addTerminalOutput('', '  logs - Show activity logs');
+                    addTerminalOutput('', '  whoami - Show current user info');
+                    addTerminalOutput('', '  date - Show current date/time');
+                    addTerminalOutput('', '  uptime - Show session duration');
+                    addTerminalOutput('', '  stats - Show statistics');
+                    addTerminalOutput('', '  export - Export logs');
+                    break;
+                    
+                case 'clear':
+                    clearTerminal();
+                    break;
+                    
+                case 'status':
+                    addTerminalOutput('success', 'System Status:');
+                    addTerminalOutput('', '  Terminal: Online');
+                    addTerminalOutput('', '  Tracking: Active');
+                    addTerminalOutput('', '  Session: ' + sessionID);
+                    addTerminalOutput('', '  Uptime: ' + getUptime());
+                    break;
+                    
+                case 'users':
+                    const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+                    addTerminalOutput('info', 'Active Users (' + users.length + '):');
+                    users.forEach(u => {
+                        addTerminalOutput('', '  - ' + u.ip + ' (' + u.location + ')');
+                    });
+                    break;
+                    
+                case 'logs':
+                    addTerminalOutput('info', 'Recent Activity:');
+                    const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+                    activities.slice(0, 10).forEach(a => {
+                        addTerminalOutput('', '  - ' + a.action + ' (' + new Date(a.timestamp).toLocaleString() + ')');
+                    });
+                    break;
+                    
+                case 'whoami':
+                    addTerminalOutput('success', 'Current User:');
+                    addTerminalOutput('', '  IP: ' + currentUser.ip);
+                    addTerminalOutput('', '  Location: ' + currentUser.location);
+                    addTerminalOutput('', '  Device: ' + currentUser.device);
+                    addTerminalOutput('', '  Browser: ' + currentUser.browser);
+                    addTerminalOutput('', '  Session: ' + currentUser.sessionID);
+                    break;
+                    
+                case 'date':
+                    addTerminalOutput('info', new Date().toString());
+                    break;
+                    
+                case 'uptime':
+                    addTerminalOutput('info', 'Session Uptime: ' + getUptime());
+                    break;
+                    
+                case 'stats':
+                    addTerminalOutput('success', 'Statistics:');
+                    addTerminalOutput('', '  Total Visitors: ' + document.getElementById('totalVisitors').textContent);
+                    addTerminalOutput('', '  Active Users: ' + document.getElementById('activeUsers').textContent);
+                    addTerminalOutput('', '  Total Sessions: ' + document.getElementById('totalSessions').textContent);
+                    addTerminalOutput('', '  Avg Duration: ' + document.getElementById('avgDuration').textContent);
+                    break;
+                    
+                case 'export':
+                    exportLogs();
+                    break;
+                    
+                default:
+                    addTerminalOutput('error', 'Unknown command: ' + cmd);
+                    addTerminalOutput('info', 'Type "help" for available commands');
+            }
+            
+            trackActivity('Executed terminal command: ' + cmd);
+        }
+
+        // Get uptime
+        function getUptime() {
+            const duration = Date.now() - startTime;
+            const minutes = Math.floor(duration / 60000);
+            const seconds = Math.floor((duration % 60000) / 1000);
+            return minutes + 'm ' + seconds + 's';
+        }
+
+        // Clear terminal
+        function clearTerminal() {
+            document.getElementById('terminalOutput').innerHTML = '';
+            addTerminalOutput('info', 'Terminal cleared');
+            addTerminalOutput('info', 'Type "help" for available commands');
+        }
+
+        // Export logs
+        function exportLogs() {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            const users = JSON.parse(localStorage.getItem('trackedUsers') || '[]');
+            
+            const exportData = {
+                generated: new Date().toISOString(),
+                activities: activities,
+                trackedUsers: users,
+                currentUser: currentUser
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'adegan95_logs_' + Date.now() + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addTerminalOutput('success', 'Logs exported successfully!');
+            trackActivity('Exported logs');
+        }
+
+        // Show help
+        function showHelp() {
+            alert('Terminal Help:\n\nAvailable Commands:\n• help - Show available commands\n• clear - Clear terminal screen\n• status - Show system status\n• users - List active users\n• logs - Show activity logs\n• whoami - Display current user info\n• date - Show current date/time\n• uptime - Show session duration\n• stats - Display statistics\n• export - Export activity logs\n\nAll user activities are tracked including IP addresses, locations, devices, and browsing behavior.');
+        }
+
+        // Track activity
+        function trackActivity(action) {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            activities.unshift({
+                action: action,
+                timestamp: new Date().toISOString(),
+                location: 'terminal.html',
+                userIP: currentUser.ip,
+                device: currentUser.device,
+                browser: currentUser.browser,
+                sessionID: sessionID
+            });
+            
+            if (activities.length > 100) activities.pop();
+            localStorage.setItem('activities', JSON.stringify(activities));
+            
+            updateStatistics();
+            loadActivityLog();
+        }
+
+        // Update statistics periodically
+        setInterval(() => {
+            updateStatistics();
+        }, 60000);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initTerminal);
+    </script>
+</body>
+</html>

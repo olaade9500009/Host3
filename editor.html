@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor - Adegan95 Global Enterprise</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 1rem;
+            height: calc(100vh - 200px);
+        }
+        
+        .editor-main {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--light-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .code-editor-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        #codeEditor {
+            width: 100%;
+            height: 100%;
+            resize: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            tab-size: 4;
+        }
+        
+        .editor-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+        
+        .error-panel {
+            background: #fef2f2;
+            border: 2px solid var(--error-color);
+            border-radius: 5px;
+            padding: 1rem;
+        }
+        
+        .error-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #fecaca;
+            margin-bottom: 0.5rem;
+        }
+        
+        .error-item:last-child {
+            border-bottom: none;
+        }
+        
+        .success-panel {
+            background: #f0fdf4;
+            border: 2px solid var(--success-color);
+            border-radius: 5px;
+            padding: 1rem;
+        }
+        
+        .robot-panel {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            border-radius: 5px;
+            padding: 1rem;
+        }
+        
+        .robot-message {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .line-number {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px;
+            background: var(--dark-bg);
+            color: #888;
+            padding: 1rem 0.5rem;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            user-select: none;
+        }
+        
+        .editor-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        
+        #codeEditor {
+            padding-left: 50px;
+        }
+        
+        .file-tabs {
+            display: flex;
+            background: var(--light-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .file-tab {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .file-tab.active {
+            background: white;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .file-tab .close {
+            color: var(--error-color);
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+    </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>📝 Code Editor</h1>
+        <p class="subtitle">Adegan95 Global Enterprise - Intelligent Code Editor with Error Detection</p>
+        <nav>
+            <div class="dropdown">
+                <button class="dropdown-btn">☰ Editor Menu ▼</button>
+                <div class="dropdown-content">
+                    <a href="index.html">🏠 Back to Home</a>
+                    <a href="filemanager.html">📁 File Manager</a>
+                    <a href="#" onclick="newFile()">➕ New File</a>
+                    <a href="#" onclick="openFile()">📂 Open File</a>
+                    <a href="#" onclick="saveFile()">💾 Save File</a>
+                    <a href="#" onclick="saveAs()">💾 Save As</a>
+                    <a href="terminal.html">💻 Terminal</a>
+                    <a href="login.html">🔐 Login</a>
+                    <a href="register.html">📝 Register</a>
+                    <a href="#" onclick="formatCode()">✨ Format Code</a>
+                </div>
+            </div>
+            <a href="index.html">🏠 Home</a>
+            <a href="filemanager.html">📁 File Manager</a>
+            <a href="terminal.html">💻 Terminal</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- File Info -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2>📄 Current File</h2>
+                    <p id="currentFileName">Untitled</p>
+                    <p id="currentFilePath" style="font-size: 0.85rem; color: var(--text-secondary);">No file loaded</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="newFile()">➕ New</button>
+                    <button class="btn btn-success" onclick="openFile()">📂 Open</button>
+                    <button class="btn btn-warning" onclick="saveFile()">💾 Save</button>
+                    <button class="btn btn-primary" onclick="runCode()">▶️ Run</button>
+                    <button class="btn btn-danger" onclick="clearEditor()">🗑️ Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Container -->
+        <div class="editor-container">
+            <!-- Main Editor Area -->
+            <div class="editor-main">
+                <div class="toolbar">
+                    <select id="languageSelect" onchange="changeLanguage()">
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="json">JSON</option>
+                        <option value="xml">XML</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="formatCode()">✨ Format</button>
+                    <button class="btn btn-success" onclick="checkErrors()">🔍 Check Errors</button>
+                    <button class="btn btn-warning" onclick="autoCorrect()">🤖 Auto Correct</button>
+                    <button class="btn btn-primary" onclick="undo()">↶ Undo</button>
+                    <button class="btn btn-primary" onclick="redo()">↷ Redo</button>
+                </div>
+                
+                <div class="editor-wrapper">
+                    <div class="line-number" id="lineNumbers">1</div>
+                    <textarea class="code-editor" id="codeEditor" placeholder="Start typing your code here..."></textarea>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="editor-sidebar">
+                <!-- Robot Assistant -->
+                <div class="robot-panel">
+                    <h3>🤖 Console Ninja</h3>
+                    <p>AI-powered code assistant</p>
+                    <div id="robotMessages">
+                        <div class="robot-message">
+                            Ready to help! Start coding and I'll analyze your code for errors and suggest improvements.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error Panel -->
+                <div class="error-panel" id="errorPanel" style="display: none;">
+                    <h3 style="color: var(--error-color);">❌ Errors Found</h3>
+                    <div id="errorList"></div>
+                    <button class="btn btn-warning" onclick="autoCorrect()" style="width: 100%; margin-top: 1rem;">🤖 Auto Correct All</button>
+                </div>
+
+                <!-- Success Panel -->
+                <div class="success-panel" id="successPanel" style="display: none;">
+                    <h3 style="color: var(--success-color);">✅ Code Status</h3>
+                    <p id="successMessage">No errors found!</p>
+                </div>
+
+                <!-- Code Statistics -->
+                <div class="card">
+                    <h3>📊 Statistics</h3>
+                    <div id="codeStats">
+                        <p>Lines: <strong id="lineCount">0</strong></p>
+                        <p>Characters: <strong id="charCount">0</strong></p>
+                        <p>Words: <strong id="wordCount">0</strong></p>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="card">
+                    <h3>👁️ Live Preview</h3>
+                    <button class="btn btn-primary" onclick="updatePreview()" style="width: 100%;">Update Preview</button>
+                    <iframe id="previewFrame" style="width: 100%; height: 200px; border: 1px solid var(--border-color); margin-top: 0.5rem; border-radius: 5px;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Adegan95 Global Enterprise. Code Editor v1.0</p>
+        <p>Owner: <span class="owner">Olawale Abdul-Ganiyu Adeshina</span></p>
+    </footer>
+
+    <script>
+        // Editor state
+        let currentFile = null;
+        let codeHistory = [];
+        let historyIndex = -1;
+        let autoSaveEnabled = true;
+
+        // DOM Elements
+        const codeEditor = document.getElementById('codeEditor');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const errorPanel = document.getElementById('errorPanel');
+        const successPanel = document.getElementById('successPanel');
+        const errorList = document.getElementById('errorList');
+        const robotMessages = document.getElementById('robotMessages');
+
+        // Initialize editor
+        function initEditor() {
+            // Check if there's a file to edit
+            const fileToEdit = localStorage.getItem('fileToEdit');
+            if (fileToEdit) {
+                const fileData = JSON.parse(fileToEdit);
+                currentFile = {
+                    path: fileData.path,
+                    name: fileData.name,
+                    content: fileData.content
+                };
+                codeEditor.value = fileData.content;
+                updateFileDisplay();
+                detectLanguage(fileData.name);
+                localStorage.removeItem('fileToEdit');
+            }
+            
+            updateLineNumbers();
+            updateStats();
+            
+            // Auto-save every 30 seconds
+            setInterval(autoSave, 30000);
+            
+            trackActivity('Opened Code Editor');
+        }
+
+        // Update line numbers
+        function updateLineNumbers() {
+            const lines = codeEditor.value.split('\n').length;
+            lineNumbers.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('<br>');
+        }
+
+        // Update file display
+        function updateFileDisplay() {
+            if (currentFile) {
+                document.getElementById('currentFileName').textContent = currentFile.name;
+                document.getElementById('currentFilePath').textContent = currentFile.path;
+            } else {
+                document.getElementById('currentFileName').textContent = 'Untitled';
+                document.getElementById('currentFilePath').textContent = 'No file loaded';
+            }
+        }
+
+        // Detect language from filename
+        function detectLanguage(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const languages = {
+                'html': 'html',
+                'htm': 'html',
+                'css': 'css',
+                'js': 'javascript',
+                'json': 'json',
+                'xml': 'xml',
+                'svg': 'xml'
+            };
+            
+            document.getElementById('languageSelect').value = languages[ext] || 'html';
+        }
+
+        // Change language
+        function changeLanguage() {
+            const lang = document.getElementById('languageSelect').value;
+            showRobotMessage(`Language switched to ${lang.toUpperCase()}. I'll check for ${lang}-specific syntax.`);
+        }
+
+        // New file
+        function newFile() {
+            if (codeEditor.value && !confirm('Unsaved changes will be lost. Continue?')) return;
+            
+            codeEditor.value = '';
+            currentFile = null;
+            updateFileDisplay();
+            updateLineNumbers();
+            updateStats();
+            showNotification('New file created!', 'success');
+            trackActivity('Created new file');
+        }
+
+        // Open file
+        function openFile() {
+            showNotification('Redirecting to File Manager...', 'info');
+            localStorage.setItem('returnToEditor', 'true');
+            window.location.href = 'filemanager.html';
+        }
+
+        // Save file
+        function saveFile() {
+            if (!currentFile) {
+                saveAs();
+                return;
+            }
+            
+            const content = codeEditor.value;
+            
+            // Update file system
+            const fileSystem = JSON.parse(localStorage.getItem('fileSystem'));
+            const pathParts = currentFile.path.split('/');
+            let currentFolder = fileSystem;
+            
+            for (let part of pathParts) {
+                if (currentFolder[part]) {
+                    currentFolder = currentFolder[part];
+                }
+            }
+            
+            if (currentFolder.children && currentFolder.children[currentFile.name]) {
+                currentFolder.children[currentFile.name].content = content;
+                currentFolder.children[currentFile.name].size = `${content.length} bytes`;
+                currentFolder.children[currentFile.name].modified = new Date().toISOString();
+                
+                localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
+                showNotification(`File "${currentFile.name}" saved!`, 'success');
+                trackActivity(`Saved file: ${currentFile.name}`);
+            } else {
+                saveAs();
+            }
+        }
+
+        // Save as
+        function saveAs() {
+            const fileName = prompt('Enter file name:');
+            if (!fileName) return;
+            
+            const content = codeEditor.value;
+            
+            // Save to file system
+            const fileSystem = JSON.parse(localStorage.getItem('fileSystem')) || { root: { type: 'folder', children: {} } };
+            fileSystem.root.children[fileName] = {
+                type: 'file',
+                content: content,
+                created: new Date().toISOString(),
+                size: `${content.length} bytes`
+            };
+            
+            localStorage.setItem('fileSystem', JSON.stringify(fileSystem));
+            
+            currentFile = {
+                path: 'root',
+                name: fileName,
+                content: content
+            };
+            
+            updateFileDisplay();
+            detectLanguage(fileName);
+            showNotification(`File saved as "${fileName}"!`, 'success');
+            trackActivity(`Saved file as: ${fileName}`);
+        }
+
+        // Auto save
+        function autoSave() {
+            if (!autoSaveEnabled || !currentFile) return;
+            saveFile();
+        }
+
+        // Check for errors
+        function checkErrors() {
+            const code = codeEditor.value;
+            const language = document.getElementById('languageSelect').value;
+            const errors = [];
+            
+            // Language-specific error checking
+            if (language === 'html') {
+                errors.push(...checkHTMLErrors(code));
+            } else if (language === 'css') {
+                errors.push(...checkCSSErrors(code));
+            } else if (language === 'javascript') {
+                errors.push(...checkJSErrors(code));
+            } else if (language === 'json') {
+                errors.push(...checkJSONErrors(code));
+            }
+            
+            // Common errors
+            errors.push(...checkCommonErrors(code));
+            
+            displayErrors(errors);
+            updateStats();
+            
+            if (errors.length === 0) {
+                showRobotMessage('Great job! No errors found in your code. Keep up the good work!');
+            } else {
+                showRobotMessage(`I found ${errors.length} error(s). Click "Auto Correct" to fix them automatically.`);
+            }
+            
+            trackActivity('Checked code for errors');
+        }
+
+        // Check HTML errors
+        function checkHTMLErrors(code) {
+            const errors = [];
+            const tags = code.match(/<[^>]+>/g) || [];
+            
+            tags.forEach((tag, index) => {
+                // Check for unclosed tags
+                if (tag.match(/^<(?!\/|br|hr|img|input|meta|link)[a-z]/i)) {
+                    const tagName = tag.match(/<([a-z]+)/i)[1];
+                    const closingTag = `</${tagName}>`;
+                    if (!code.includes(closingTag) && !code.match(new RegExp(`<${tagName}\\s*/>`, 'i'))) {
+                        errors.push({
+                            line: getLineNumber(code, index),
+                            message: `Unclosed tag: <${tagName}>`,
+                            severity: 'warning'
+                        });
+                    }
+                }
+            });
+            
+            // Check for missing quotes
+            if (code.match(/=[a-z]+[^"'\s>]/i)) {
+                errors.push({
+                    line: 1,
+                    message: 'Missing quotes around attribute value',
+                    severity: 'error'
+                });
+            }
+            
+            return errors;
+        }
+
+        // Check CSS errors
+        function checkCSSErrors(code) {
+            const errors = [];
+            
+            // Check for missing semicolons
+            const rules = code.match(/\{[^}]*\}/g) || [];
+            rules.forEach(rule => {
+                const properties = rule.match(/[^:]+:[^;]+/g) || [];
+                properties.forEach(prop => {
+                    if (!prop.endsWith(';') && !prop.trim().endsWith('}')) {
+                        errors.push({
+                            line: 1,
+                            message: 'Missing semicolon after property',
+                            severity: 'warning'
+                        });
+                    }
+                });
+            });
+            
+            // Check for unmatched braces
+            const openBraces = (code.match(/\{/g) || []).length;
+            const closeBraces = (code.match(/\}/g) || []).length;
+            if (openBraces !== closeBraces) {
+                errors.push({
+                    line: 1,
+                    message: `Unmatched braces: ${openBraces} open, ${closeBraces} close`,
+                    severity: 'error'
+                });
+            }
+            
+            return errors;
+        }
+
+        // Check JavaScript errors
+        function checkJSErrors(code) {
+            const errors = [];
+            
+            // Check for syntax errors
+            try {
+                // Remove console.log and similar for validation
+                const testCode = code.replace(/console\.[a-z]+\([^)]*\);?/g, '');
+                new Function(testCode);
+            } catch (e) {
+                errors.push({
+                    line: 1,
+                    message: `Syntax error: ${e.message}`,
+                    severity: 'error'
+                });
+            }
+            
+            // Check for missing semicolons
+            const lines = code.split('\n');
+            lines.forEach((line, index) => {
+                const trimmed = line.trim();
+                if (trimmed && 
+                    !trimmed.endsWith(';') && 
+                    !trimmed.endsWith('{') && 
+                    !trimmed.endsWith('}') &&
+                    !trimmed.startsWith('//') &&
+                    !trimmed.startsWith('/*') &&
+                    !trimmed.endsWith('*/') &&
+                    !trimmed.match(/^(if|else|for|while|function|switch|case|break|continue|return|throw|try|catch|finally|var|let|const)\b/)) {
+                    errors.push({
+                        line: index + 1,
+                        message: 'Missing semicolon at end of statement',
+                        severity: 'warning'
+                    });
+                }
+            });
+            
+            // Check for unmatched brackets
+            const openParens = (code.match(/\(/g) || []).length;
+            const closeParens = (code.match(/\)/g) || []).length;
+            const openBrackets = (code.match(/\[/g) || []).length;
+            const closeBrackets = (code.match(/\]/g) || []).length;
+            const openBraces = (code.match(/\{/g) || []).length;
+            const closeBraces = (code.match(/\}/g) || []).length;
+            
+            if (openParens !== closeParens) {
+                errors.push({
+                    line: 1,
+                    message: `Unmatched parentheses: ${openParens} open, ${closeParens} close`,
+                    severity: 'error'
+                });
+            }
+            
+            if (openBrackets !== closeBrackets) {
+                errors.push({
+                    line: 1,
+                    message: `Unmatched brackets: ${openBrackets} open, ${closeBrackets} close`,
+                    severity: 'error'
+                });
+            }
+            
+            if (openBraces !== closeBraces) {
+                errors.push({
+                    line: 1,
+                    message: `Unmatched braces: ${openBraces} open, ${closeBraces} close`,
+                    severity: 'error'
+                });
+            }
+            
+            return errors;
+        }
+
+        // Check JSON errors
+        function checkJSONErrors(code) {
+            const errors = [];
+            
+            try {
+                JSON.parse(code);
+            } catch (e) {
+                errors.push({
+                    line: 1,
+                    message: `JSON parse error: ${e.message}`,
+                    severity: 'error'
+                });
+            }
+            
+            return errors;
+        }
+
+        // Check common errors
+        function checkCommonErrors(code) {
+            const errors = [];
+            
+            // Check for common typos
+            const commonTypos = [
+                { pattern: /widh:/gi, message: 'Did you mean "width:"?' },
+                { pattern: /heigth:/gi, message: 'Did you mean "height:"?' },
+                { pattern: /backgroud:/gi, message: 'Did you mean "background:"?' },
+                { pattern: /algin:/gi, message: 'Did you mean "align:"?' },
+                { pattern: /funtion/gi, message: 'Did you mean "function"?' },
+                { pattern: /lenght/gi, message: 'Did you mean "length"?' }
+            ];
+            
+            commonTypos.forEach(typo => {
+                if (code.match(typo.pattern)) {
+                    errors.push({
+                        line: 1,
+                        message: typo.message,
+                        severity: 'warning'
+                    });
+                }
+            });
+            
+            return errors;
+        }
+
+        // Display errors
+        function displayErrors(errors) {
+            if (errors.length === 0) {
+                errorPanel.style.display = 'none';
+                successPanel.style.display = 'block';
+                document.getElementById('successMessage').textContent = 'No errors found! Your code looks good.';
+            } else {
+                successPanel.style.display = 'none';
+                errorPanel.style.display = 'block';
+                
+                errorList.innerHTML = errors.map(error => `
+                    <div class="error-item">
+                        <p><strong>Line ${error.line}:</strong> ${error.message}</p>
+                        <span style="font-size: 0.8rem; color: ${error.severity === 'error' ? '#ef4444' : '#f59e0b'};">
+                            ${error.severity === 'error' ? '❌ Error' : '⚠️ Warning'}
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Auto correct errors
+        function autoCorrect() {
+            let code = codeEditor.value;
+            const language = document.getElementById('languageSelect').value;
+            let corrections = 0;
+            
+            // Fix common typos
+            const fixes = [
+                { pattern: /widh:/gi, replacement: 'width:' },
+                { pattern: /heigth:/gi, replacement: 'height:' },
+                { pattern: /backgroud:/gi, replacement: 'background:' },
+                { pattern: /algin:/gi, replacement: 'align:' },
+                { pattern: /funtion/gi, replacement: 'function' },
+                { pattern: /lenght/gi, replacement: 'length' }
+            ];
+            
+            fixes.forEach(fix => {
+                if (code.match(fix.pattern)) {
+                    code = code.replace(fix.pattern, fix.replacement);
+                    corrections++;
+                }
+            });
+            
+            // Add missing semicolons in CSS
+            if (language === 'css') {
+                code = code.replace(/([a-z-]+:\s*[^;]+)(?=[\n}])/gi, '$1;');
+                corrections++;
+            }
+            
+            // Format code
+            if (corrections > 0) {
+                codeEditor.value = code;
+                updateLineNumbers();
+                updateStats();
+                showNotification(`Auto-corrected ${corrections} issue(s)!`, 'success');
+                showRobotMessage(`I've fixed ${corrections} issue(s) in your code. Check the results and let me know if you need more help!`);
+                trackActivity('Auto-corrected code errors');
+            } else {
+                showNotification('No corrections needed!', 'success');
+                showRobotMessage('Your code looks great! No corrections were necessary.');
+            }
+            
+            checkErrors();
+        }
+
+        // Format code
+        function formatCode() {
+            let code = codeEditor.value;
+            const language = document.getElementById('languageSelect').value;
+            
+            // Basic formatting
+            code = code.replace(/\s+/g, ' ').trim();
+            
+            // Add proper indentation
+            let formatted = '';
+            let indent = 0;
+            
+            if (language === 'html' || language === 'xml') {
+                code.split(/(<[^>]+>)/g).forEach(part => {
+                    if (part.match(/<\//)) {
+                        indent--;
+                    }
+                    formatted += '  '.repeat(Math.max(0, indent)) + part + '\n';
+                    if (part.match(/<[^/!][^>]*[^/]>/) && !part.match(/<(br|hr|img|input|meta|link)/i)) {
+                        indent++;
+                    }
+                });
+            } else {
+                formatted = code;
+            }
+            
+            codeEditor.value = formatted.trim();
+            updateLineNumbers();
+            updateStats();
+            showNotification('Code formatted!', 'success');
+            showRobotMessage('I\'ve formatted your code with proper indentation and spacing.');
+            trackActivity('Formatted code');
+        }
+
+        // Run code
+        function runCode() {
+            const code = codeEditor.value;
+            const language = document.getElementById('languageSelect').value;
+            
+            try {
+                if (language === 'javascript') {
+                    eval(code);
+                    showNotification('Code executed successfully!', 'success');
+                } else if (language === 'html') {
+                    updatePreview();
+                    showNotification('Code preview updated!', 'success');
+                } else {
+                    showNotification('Cannot run ' + language + ' code directly', 'warning');
+                }
+                trackActivity('Ran code');
+            } catch (e) {
+                showNotification('Error: ' + e.message, 'error');
+            }
+        }
+
+        // Update preview
+        function updatePreview() {
+            const code = codeEditor.value;
+            const language = document.getElementById('languageSelect').value;
+            const previewFrame = document.getElementById('previewFrame');
+            
+            if (language === 'html') {
+                previewFrame.srcdoc = code;
+            } else {
+                showNotification('Preview only available for HTML', 'warning');
+            }
+        }
+
+        // Clear editor
+        function clearEditor() {
+            if (codeEditor.value && !confirm('Clear all code? This cannot be undone.')) return;
+            codeEditor.value = '';
+            updateLineNumbers();
+            updateStats();
+            showNotification('Editor cleared!', 'info');
+        }
+
+        // Undo
+        function undo() {
+            document.execCommand('undo');
+            updateLineNumbers();
+            updateStats();
+        }
+
+        // Redo
+        function redo() {
+            document.execCommand('redo');
+            updateLineNumbers();
+            updateStats();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const code = codeEditor.value;
+            document.getElementById('lineCount').textContent = code.split('\n').length;
+            document.getElementById('charCount').textContent = code.length;
+            document.getElementById('wordCount').textContent = code.trim().split(/\s+/).filter(w => w).length;
+        }
+
+        // Get line number for a position
+        function getLineNumber(code, position) {
+            return code.substring(0, position).split('\n').length;
+        }
+
+        // Show robot message
+        function showRobotMessage(message) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'robot-message';
+            msgDiv.textContent = message;
+            robotMessages.appendChild(msgDiv);
+            
+            // Keep only last 5 messages
+            while (robotMessages.children.length > 5) {
+                robotMessages.removeChild(robotMessages.firstChild);
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 2rem;
+                border-radius: 5px;
+                color: white;
+                z-index: 10000;
+            `;
+            
+            const colors = {
+                success: '#22c55e',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Track activity
+        function trackActivity(action) {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            activities.unshift({
+                action: action,
+                timestamp: new Date().toISOString(),
+                location: 'editor.html',
+                file: currentFile ? currentFile.name : 'Untitled'
+            });
+            
+            if (activities.length > 20) activities.pop();
+            localStorage.setItem('activities', JSON.stringify(activities));
+        }
+
+        // Event listeners
+        codeEditor.addEventListener('input', () => {
+            updateLineNumbers();
+            updateStats();
+        });
+
+        codeEditor.addEventListener('scroll', () => {
+            lineNumbers.scrollTop = codeEditor.scrollTop;
+        });
+
+        // Keyboard shortcuts
+        codeEditor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = codeEditor.selectionStart;
+                const end = codeEditor.selectionEnd;
+                codeEditor.value = codeEditor.value.substring(0, start) + '    ' + codeEditor.value.substring(end);
+                codeEditor.selectionStart = codeEditor.selectionEnd = start + 4;
+            }
+            
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 's') {
+                    e.preventDefault();
+                    saveFile();
+                } else if (e.key === 'z') {
+                    e.preventDefault();
+                    undo();
+                } else if (e.key === 'y') {
+                    e.preventDefault();
+                    redo();
+                }
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initEditor);
+    </script>
+</body>
+</html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adegan95 Global Enterprise - Web Block Page</title>
+    <link rel="stylesheet" href="styles.css">
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Adegan95 Global Enterprise</h1>
+        <p class="subtitle">Your Complete Web Development & File Management Solution</p>
+        <nav>
+            <div class="dropdown">
+                <button class="dropdown-btn">☰ Main Menu ▼</button>
+                <div class="dropdown-content">
+                    <a href="index.html">🏠 Home</a>
+                    <a href="filemanager.html">📁 File Manager</a>
+                    <a href="editor.html">📝 Code Editor</a>
+                    <a href="terminal.html">💻 Terminal & Tracking</a>
+                    <a href="login.html">🔐 Login</a>
+                    <a href="register.html">📝 Register</a>
+                    <a href="#" onclick="addFolder()">➕ Add Folder</a>
+                    <a href="#" onclick="uploadFile()">📤 Upload File</a>
+                    <a href="#" onclick="createNewFile()">📄 Create New File</a>
+                    <a href="#" onclick="showHelp()">❓ Help & Support</a>
+                </div>
+            </div>
+            <a href="filemanager.html">📁 File Manager</a>
+            <a href="editor.html">📝 Code Editor</a>
+            <a href="terminal.html">💻 Terminal</a>
+            <a href="login.html">🔐 Login</a>
+            <a href="register.html">📝 Register</a>
+            <a href="#" onclick="showAbout()">ℹ️ About</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- URL Display Section -->
+        <div class="url-display fade-in">
+            <h3>🌐 Your Generated Web URL</h3>
+            <div class="generated-url" id="generatedUrl">Generating...</div>
+            <p style="color: rgba(255,255,255,0.8); margin: 1rem 0; font-size: 0.9rem;">
+                Share this URL to let others access your deployed site
+            </p>
+            <br>
+            <button class="btn btn-success" onclick="openInBrowser()">🚀 Open in Browser</button>
+            <button class="btn btn-primary" onclick="copyUrl()">📋 Copy URL</button>
+            <button class="btn btn-warning" onclick="generateNewUrl()">🔄 Generate New URL</button>
+            <button class="btn btn-primary" onclick="deploySite()">📤 Deploy Current Site</button>
+        </div>
+
+        <!-- Welcome Section -->
+        <div class="card fade-in">
+            <h2>Welcome to Adegan95 Global Enterprise</h2>
+            <p>Your comprehensive web development and file management platform. Create, edit, upload, download, and manage all your files with powerful tools including an intelligent code editor, real-time error detection, and advanced user tracking.</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card fade-in">
+            <h2>⚡ Quick Actions</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="window.location.href='filemanager.html'">📁 Open File Manager</button>
+                <button class="btn btn-success" onclick="window.location.href='editor.html'">📝 Launch Code Editor</button>
+                <button class="btn btn-warning" onclick="addFolder()">➕ Add New Folder</button>
+                <button class="btn btn-danger" onclick="uploadFile()">📤 Upload Files</button>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="card fade-in">
+            <h2>✨ Key Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div style="padding: 1rem; background: var(--light-bg); border-radius: 5px;">
+                    <h3 style="color: var(--primary-color);">📁 File Management</h3>
+                    <p>Create, upload, download, edit, copy, paste, and organize files and folders effortlessly.</p>
+                </div>
+                <div style="padding: 1rem; background: var(--light-bg); border-radius: 5px;">
+                    <h3 style="color: var(--success-color);">🤖 Intelligent Editor</h3>
+                    <p>Advanced code editor with AI-powered error detection and auto-correction capabilities.</p>
+                </div>
+                <div style="padding: 1rem; background: var(--light-bg); border-radius: 5px;">
+                    <h3 style="color: var(--warning-color);">💻 Terminal Tracking</h3>
+                    <p>Real-time user tracking with IP addresses, device information, and activity monitoring.</p>
+                </div>
+                <div style="padding: 1rem; background: var(--light-bg); border-radius: 5px;">
+                    <h3 style="color: var(--secondary-color);">🌐 URL Generator</h3>
+                    <p>Generate and manage unique web URLs for easy sharing and access to your projects.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Ninja Extension Panel -->
+        <div class="card fade-in">
+            <h2>🥷 Console Ninja Extension</h2>
+            <p style="margin-bottom: 1rem;">AI-powered code assistant that helps you write better code, detects errors, and provides intelligent suggestions.</p>
+            <div id="consoleNinjaStatus" style="padding: 1rem; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 5px;">
+                <p><strong>Status:</strong> <span style="color: #22c55e;">✓ Active and Ready</span></p>
+                <p><strong>Features:</strong> Error detection, auto-correction, code optimization, real-time suggestions</p>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card fade-in">
+            <h2>📊 Recent Activity</h2>
+            <div id="recentActivity">
+                <p>No recent activity to display.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Robot Assistant -->
+    <div class="robot-assistant" id="robotAssistant">
+        <h4>🤖 Code Assistant</h4>
+        <p>Hello! I'm here to help you with coding, error detection, and optimization. I'll analyze your code and suggest improvements.</p>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Adegan95 Global Enterprise. All rights reserved.</p>
+        <p>Owner: <span class="owner">Olawale Abdul-Ganiyu Adeshina</span></p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Empowering Your Digital Success</p>
+    </footer>
+
+    <script>
+        // Generate unique URL
+        function generateUniqueUrl() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(7);
+            return `https://adegan95-global-enterprise-${random}-${timestamp}.web.app`;
+        }
+
+        // Initialize URL
+        function initializeUrl() {
+            let url = localStorage.getItem('generatedUrl');
+            if (!url) {
+                url = generateUniqueUrl();
+                localStorage.setItem('generatedUrl', url);
+            }
+            document.getElementById('generatedUrl').textContent = url;
+        }
+
+        // Generate new URL
+        function generateNewUrl() {
+            const url = generateUniqueUrl();
+            localStorage.setItem('generatedUrl', url);
+            document.getElementById('generatedUrl').textContent = url;
+            showNotification('New URL generated successfully!', 'success');
+            trackActivity('Generated new URL');
+        }
+
+        // Copy URL
+        function copyUrl() {
+            const url = document.getElementById('generatedUrl').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('URL copied to clipboard!', 'success');
+            }).catch(err => {
+                showNotification('Failed to copy URL', 'error');
+            });
+        }
+
+        // Open in browser
+        function openInBrowser() {
+            const url = document.getElementById('generatedUrl').textContent;
+            window.open(url, '_blank');
+            trackActivity('Opened URL in browser');
+        }
+        
+        // Deploy site and generate URL
+        function deploySite() {
+            const fileSystem = JSON.parse(localStorage.getItem('fileSystem') || '{}');
+            
+            // Check if index.html exists
+            if (!fileSystem.root || !fileSystem.root.children || !fileSystem.root.children['index.html']) {
+                alert('Please create an index.html file in the root folder first!');
+                return;
+            }
+            
+            // Generate deployment URL
+            const baseUrl = 'https://adegan95globalenterprise-000d3.app.super.myninja.ai';
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(7);
+            const deployUrl = `${baseUrl}/deploy/${random}_${timestamp}`;
+            
+            // Save deployment info
+            const deployments = JSON.parse(localStorage.getItem('deployments') || '[]');
+            deployments.unshift({
+                url: deployUrl,
+                timestamp: new Date().toISOString(),
+                fileSystem: fileSystem
+            });
+            localStorage.setItem('deployments', JSON.stringify(deployments));
+            
+            // Update display
+            document.getElementById('generatedUrl').textContent = deployUrl;
+            
+            // Show notification
+            showNotification('Site deployed successfully!', 'success');
+            trackActivity('Deployed site: ' + deployUrl);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(deployUrl).then(() => {
+                alert('Deployment URL copied to clipboard!\n\n' + deployUrl);
+            }).catch(err => {
+                alert('Deployment successful!\n\nURL: ' + deployUrl);
+            });
+        }
+
+        // Add folder
+        function addFolder() {
+            const folderName = prompt('Enter folder name:');
+            if (folderName) {
+                const folders = JSON.parse(localStorage.getItem('folders') || '{}');
+                folders[folderName] = {
+                    created: new Date().toISOString(),
+                    files: [],
+                    subfolders: []
+                };
+                localStorage.setItem('folders', JSON.stringify(folders));
+                showNotification(`Folder "${folderName}" created successfully!`, 'success');
+                trackActivity(`Created folder: ${folderName}`);
+            }
+        }
+
+        // Upload file (placeholder)
+        function uploadFile() {
+            showNotification('Redirecting to File Manager for upload...', 'info');
+            setTimeout(() => {
+                window.location.href = 'filemanager.html';
+            }, 1000);
+        }
+
+        // Create new file
+        function createNewFile() {
+            const fileName = prompt('Enter file name (e.g., index.html, style.css):');
+            if (fileName) {
+                showNotification('Redirecting to Code Editor...', 'info');
+                setTimeout(() => {
+                    window.location.href = 'editor.html';
+                }, 1000);
+            }
+        }
+
+        // Show help
+        function showHelp() {
+            alert('Help & Support:\n\n1. Use the dropdown menu to navigate\n2. File Manager helps you organize files\n3. Code Editor has AI-powered error detection\n4. Terminal tracks all user activity\n5. Generate URLs for easy sharing\n\nFor more help, contact the owner.');
+        }
+
+        // Show about
+        function showAbout() {
+            alert('Adegan95 Global Enterprise\n\nOwner: Olawale Abdul-Ganiyu Adeshina\n\nA comprehensive web development platform with advanced file management, intelligent coding assistance, and real-time user tracking.');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 2rem;
+                border-radius: 5px;
+                color: white;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease-in;
+            `;
+            
+            const colors = {
+                success: '#22c55e',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Activity tracking
+        function trackActivity(action) {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            activities.unshift({
+                action: action,
+                timestamp: new Date().toISOString(),
+                userIP: '192.168.1.' + Math.floor(Math.random() * 255),
+                device: navigator.userAgent.split(')')[0] + ')'
+            });
+            
+            if (activities.length > 10) activities.pop();
+            localStorage.setItem('activities', JSON.stringify(activities));
+            updateRecentActivity();
+        }
+
+        // Update recent activity display
+        function updateRecentActivity() {
+            const activities = JSON.parse(localStorage.getItem('activities') || '[]');
+            const container = document.getElementById('recentActivity');
+            
+            if (activities.length === 0) {
+                container.innerHTML = '<p>No recent activity to display.</p>';
+                return;
+            }
+            
+            container.innerHTML = activities.slice(0, 5).map(activity => `
+                <div style="padding: 0.5rem; border-bottom: 1px solid var(--border-color);">
+                    <p><strong>${activity.action}</strong></p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                        ${new Date(activity.timestamp).toLocaleString()} | 
+                        IP: ${activity.userIP} | 
+                        Device: ${activity.device.substring(0, 50)}...
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUrl();
+            updateRecentActivity();
+            trackActivity('Landed on main page');
+            
+            // Track page visits
+            setInterval(() => {
+                trackActivity('Active on main page');
+            }, 60000);
+        });
+    </script>
+</body>
+</html>
