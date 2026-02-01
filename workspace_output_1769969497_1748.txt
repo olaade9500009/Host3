@@ -1,0 +1,20 @@
+index.html:57:            <p>Your comprehensive web development and file management platform. Create, edit, upload, download, and manage all your files with powerful tools including an intelligent code editor, real-time error detection, and advanced user tracking.</p>
+index.html:81:                    <p>Advanced code editor with AI-powered error detection and auto-correction capabilities.</p>
+index.html:97:            <p style="margin-bottom: 1rem;">AI-powered code assistant that helps you write better code, detects errors, and provides intelligent suggestions.</p>
+index.html:100:                <p><strong>Features:</strong> Error detection, auto-correction, code optimization, real-time suggestions</p>
+index.html:116:        <p>Hello! I'm here to help you with coding, error detection, and optimization. I'll analyze your code and suggest improvements.</p>
+index.html:158:                showNotification('Failed to copy URL', 'error');
+index.html:246:            alert('Help & Support:\n\n1. Use the dropdown menu to navigate\n2. File Manager helps you organize files\n3. Code Editor has AI-powered error detection\n4. Terminal tracks all user activity\n5. Generate URLs for easy sharing\n\nFor more help, contact the owner.');
+index.html:270:                error: '#ef4444',
+filemanager.html:112:        let selectedItem = null;
+filemanager.html:249:            selectedItem = null;
+filemanager.html:281:                selectedItem = null;
+filemanager.html:463:                showNotification('Please upload a ZIP file', 'error');
+filemanager.html:498:                } catch (error) {
+filemanager.html:499:                    showNotification('Error extracting ZIP file', 'error');
+filemanager.html:500:                    console.error(error);
+filemanager.html:566:            selectedItem = null;
+filemanager.html:737:                error: '#ef4444',
+editor.html:51:        .error-panel {
+editor.html:53:            border: 2px solid var(--error-color);
+editor.html:58:        .error-item {

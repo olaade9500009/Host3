@@ -1,0 +1,18 @@
+=== index.html Syntax Check ===
+✓ Valid HTML structure
+✓ Head and body tags present
+=== filemanager.html Syntax Check ===
+✓ Valid HTML structure
+✓ Head and body tags present
+=== editor.html Syntax Check ===
+✓ Valid HTML structure
+✓ Head and body tags present
+=== terminal.html Syntax Check ===
+✓ Valid HTML structure
+✓ Head and body tags present
+=== login.html Syntax Check ===
+✓ Valid HTML structure
+✓ Head and body tags present
+=== register.html Syntax Check ===
+✓ Valid HTML structure
+✓ Head and body tags present

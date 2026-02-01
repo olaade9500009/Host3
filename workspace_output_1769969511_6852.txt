@@ -1,0 +1,12 @@
+=== Checking index.html ===
+28
+=== Checking filemanager.html ===
+59
+=== Checking editor.html ===
+53
+=== Checking terminal.html ===
+30
+=== Checking login.html ===
+5
+=== Checking register.html ===
+3
